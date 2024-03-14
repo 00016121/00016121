@@ -1,0 +1,8 @@
+.table-yellow-bg th {
+    background-color: #FFD700;
+    color: #8B4513;
+  }
+  .col-border {
+    border-right: 1px solid black;
+  }
+  

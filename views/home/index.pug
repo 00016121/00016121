@@ -1,0 +1,86 @@
+include ../head.pug
+body(style="background-color: #ffffcc;") 
+    .container.mt-5
+      h2 This web application was created to fulfill Web Technology module's requirements and does not represent any actual company or service
+      .row.d-flex.align-items-center
+        .col-md-6.mt-5
+          h1 Upcoming Events 
+        .col-md-6.text-end.mt-5
+          a.btn.btn-success(href='/add', role='button', style='background-color: #FFD700; border-color: black; color: black;') Create Event      
+      table.table.table-responsive.table-hover.table-striped
+        thead
+          tr.table-yellow-bg
+            th(scope="col") ID
+            th(scope="col") Event Name
+            th(scope="col") Event DateTime
+            th(scope="col") Venue
+            th(scope="col") Contact Phone
+            th(scope="col") Seat
+            th(scope="col") Status
+            th(scope="col") Actions
+        tbody
+script.
+  document.addEventListener('DOMContentLoaded', function() {
+    axios.get('/api/ticket').then(function(response) {
+      const tickets = response.data;
+      const tableBody = document.querySelector('table tbody');
+      tickets.forEach(t => {
+        const row = document.createElement('tr');
+        const ticket = t.ticket;
+        const status = getStatus(ticket.eventDateTime);
+        row.innerHTML = `
+          <td>${t.id}</td>
+          <td>${ticket.eventName}</td>
+          <td>${ticket.eventDateTime}</td>
+          <td>${ticket.venue}</td>
+          <td>${ticket.contactPhone}</td>
+          <td>${ticket.seat}</td>
+          <td class="${status.class}">${status.text}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" data-id="${t.id}" onclick="window.location.href='/update/${t.id}'" style="background-color: green; border-color: green;">Update</button>
+            <button class="btn btn-danger btn-sm" data-id="${t.id}" style="background-color: darkred; border-color: darkred;">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    })
+    .catch(function(error) {
+      console.log(error);
+    });
+
+    // Function to determine status
+    function getStatus(eventDateTime) {
+      function getCurrentDateTime() {
+      const currentDate = new Date();
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const year = currentDate.getFullYear();
+      const hours = String(currentDate.getHours()).padStart(2, '0');
+      const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
+      const currentDate = getCurrentDateTime();  
+
+      const eventDate = eventDateTime;
+      if (eventDate < currentDate) {
+        return { text: 'Inactive', class: 'text-danger' };
+      } else {
+        return { text: 'Active', class: 'text-success' };
+      }
+    }
+
+    // Use event delegation for delete buttons
+    document.addEventListener('click', function(event) {
+      if (event.target && event.target.classList.contains('btn-danger')) {
+        const ticketId = event.target.getAttribute('data-id');
+        axios.delete(`/api/ticket/${ticketId}`).then(function(response) {
+          alert('Deleted successfully', response);
+          location.href = '/'
+        })
+        .catch(function(error) {
+          alert('Error deleting ticket: ' + error);
+        });
+      }
+    });
+    
+  });
